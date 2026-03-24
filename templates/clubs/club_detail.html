@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">{{ club.nombre }}</h2>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Categoría: <span class="badge bg-info">{{ club.categoria }}</span></h5>
+            <p class="card-text"><strong>Descripción:</strong></p>
+            <p class="card-text">{{ club.descripcion }}</p>
+            
+            <hr>
+            
+            <p><strong>Creado por:</strong> {{ club.creado_por.username }}</p>
+            <p><strong>Fecha de creación:</strong> {{ club.fecha_creacion|date:"d/m/Y H:i" }}</p>
+            
+            <hr>
+            
+            <h5>Miembros del Club</h5>
+            {% if club.membership_set.all %}
+                <ul class="list-group">
+                    {% for membership in club.membership_set.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ membership.user.username }}</strong>
+                                <small class="text-muted d-block">(Inscrito: {{ membership.fecha_inscripcion|date:"d/m/Y" }})</small>
+                            </div>
+                            <!-- Botón eliminar miembro solo para coordinador o creador del club -->
+                            {% if es_creador or es_coordinador %}
+                                <form method="post" action="{% url 'remove_member' club.pk membership.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar a este miembro?')">Eliminar</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Este club aún no tiene miembros.</p>
+            {% endif %}
+        </div>
+        <div class="card-footer">
+            <!-- Botón para ver eventos -->
+            <a href="{% url 'event_list' club.pk %}" class="btn btn-info">📅 Ver Eventos</a>
+            
+            <!-- Botones para coordinadores/creadores -->
+            {% if es_creador or es_coordinador %}
+                <a href="{% url 'club_edit' club.pk %}" class="btn btn-warning">Editar Club</a>
+                <a href="{% url 'club_delete' club.pk %}" class="btn btn-danger">Eliminar Club</a>
+            {% endif %}
+            
+            <!-- Botón para unirse (solo si no está inscrito y no es creador) -->
+            {% if not ya_inscrito and not es_creador %}
+                <form method="post" action="{% url 'club_join' club.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Unirse al Club</button>
+                </form>
+            {% elif ya_inscrito and not es_creador %}
+                <!-- Botón para salirse del club (solo para estudiantes inscritos) -->
+                <form method="post" action="{% url 'club_leave' club.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('¿Deseas salirte de este club?')">Salirse del Club</button>
+                </form>
+                <span class="badge bg-success">Eres miembro</span>
+            {% endif %}
+            
+            <a href="{% url 'club_list' %}" class="btn btn-secondary">Volver a Clubes</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

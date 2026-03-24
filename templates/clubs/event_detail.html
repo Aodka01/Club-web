@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Detalle del Evento -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                {% if event.foto %}
+                    <img src="{{ event.foto.url }}" class="card-img-top" alt="{{ event.titulo }}" style="height: 400px; object-fit: cover;">
+                {% else %}
+                    <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 400px;">
+                        <span class="text-white fs-5">Sin foto</span>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <h2 class="card-title">{{ event.titulo }}</h2>
+                    
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>📅 Fecha y Hora:</strong><br>
+                                    {{ event.fecha_hora|date:"d \d\e F \d\e Y \a \l\a\s H:i" }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <strong>📍 Lugar:</strong><br>
+                                    {{ event.lugar }}
+                                </p>
+                            </div>
+                        </div>
+                        {% if event.cupo %}
+                            <p class="mb-0">
+                                <strong>👥 Cupo:</strong> {{ event.cupo }} personas
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Descripción</h5>
+                        <p>{{ event.descripcion }}</p>
+                    </div>
+
+                    <div class="mb-3 text-muted">
+                        <small>Creado por: <strong>{{ event.creado_por.username }}</strong> el {{ event.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                    </div>
+
+                    {% if es_creador or es_coordinador %}
+                        <a href="{% url 'event_edit' event.pk %}" class="btn btn-warning">Editar Evento</a>
+                        <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger">Eliminar Evento</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comentarios -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">💬 Comentarios ({{ comentarios.count }})</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Formulario para agregar comentario -->
+                    <form method="post" action="{% url 'add_comment' event.pk %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <textarea class="form-control" name="contenido" rows="3" placeholder="Comparte tu comentario..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Comentar</button>
+                    </form>
+
+                    <hr>
+
+                    <!-- Lista de comentarios -->
+                    {% if comentarios %}
+                        <div class="comentarios-list">
+                            {% for comentario in comentarios %}
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <strong>{{ comentario.usuario.username }}</strong>
+                                            <small class="text-muted d-block">{{ comentario.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        {% if usuario == comentario.usuario or es_coordinador %}
+                                            <form method="post" action="{% url 'delete_comment' comentario.pk %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar comentario?')">🗑️</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                    <p class="mt-2 mb-0">{{ comentario.contenido }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar con info del club -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">ℹ️ Información</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Club:</strong><br>
+                        <a href="{% url 'club_detail' event.club.pk %}">{{ event.club.nombre }}</a>
+                    </p>
+                    <p class="mb-2">
+                        <strong>Categoría:</strong><br>
+                        <span class="badge bg-info">{{ event.club.categoria }}</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Creado por:</strong><br>
+                        {{ event.creado_por.username }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{% url 'event_list' event.club.pk %}" class="btn btn-secondary mt-4">Volver a Eventos</a>
+</div>
+
+<style>
+    .comentarios-list .border-bottom:last-child {
+        border-bottom: none !important;
+    }
+</style>
+{% endblock %}

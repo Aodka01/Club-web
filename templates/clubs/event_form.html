@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        {% if form.instance.pk %}
+                            Editar Evento
+                        {% else %}
+                            Crear Nuevo Evento - {{ club.nombre }}
+                        {% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_titulo" class="form-label">Título del Evento *</label>
+                            {{ form.titulo }}
+                            {% if form.titulo.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.titulo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_descripcion" class="form-label">Descripción *</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.descripcion.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_fecha" class="form-label">Fecha *</label>
+                                    {{ form.fecha }}
+                                    <small class="text-muted">Selecciona la fecha del evento</small>
+                                    {% if form.fecha.errors %}
+                                        <div class="alert alert-danger mt-2">{{ form.fecha.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_hora" class="form-label">Hora *</label>
+                                    {{ form.hora }}
+                                    <small class="text-muted">Formato: HH:mm (14:30)</small>
+                                    {% if form.hora.errors %}
+                                        <div class="alert alert-danger mt-2">{{ form.hora.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_lugar" class="form-label">Lugar *</label>
+                            {{ form.lugar }}
+                            {% if form.lugar.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.lugar.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_cupo" class="form-label">Cupo (opcional)</label>
+                                    {{ form.cupo }}
+                                    <small class="text-muted">Máximo de personas permitidas</small>
+                                    {% if form.cupo.errors %}
+                                        <div class="alert alert-danger mt-2">{{ form.cupo.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_foto" class="form-label">Foto del Evento (opcional)</label>
+                                    {{ form.foto }}
+                                    <small class="text-muted">Sube una imagen JPG o PNG</small>
+                                    {% if form.foto.errors %}
+                                        <div class="alert alert-danger mt-2">{{ form.foto.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger mb-3">
+                                <strong>Errores:</strong>
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                {% if form.instance.pk %}
+                                    Guardar Cambios
+                                {% else %}
+                                    Crear Evento
+                                {% endif %}
+                            </button>
+                            <a href="{% if form.instance.pk %}{% url 'event_detail' form.instance.pk %}{% else %}{% url 'event_list' club.pk %}{% endif %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    textarea, input[type="text"], input[type="number"], input[type="file"], 
+    input[type="date"], input[type="time"] {
+        width: 100% !important;
+    }
+</style>
+{% endblock %}

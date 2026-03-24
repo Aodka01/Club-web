@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Eliminar Evento</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">
+                        <strong>¿Estás seguro de que deseas eliminar el evento:</strong><br>
+                        <em>"{{ event.titulo }}"</em>?
+                    </p>
+                    <p class="text-muted mb-4">
+                        Esta acción no se puede deshacer.
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sí, Eliminar Evento</button>
+                        <a href="{% url 'event_detail' event.pk %}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
