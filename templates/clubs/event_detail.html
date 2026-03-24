@@ -42,6 +42,82 @@
                         <p>{{ event.descripcion }}</p>
                     </div>
 
+                    <!-- Sección de Asistencia -->
+                    <div class="mb-4 p-3 bg-light rounded">
+                        <h5 class="mb-3">👥 Asistencia al Evento</h5>
+                        
+                        {% if event.cupo %}
+                            <div class="mb-3">
+                                <strong>Cupo:</strong> {{ asistentes.count }}/{{ event.cupo }} inscritos
+                                {% if cupo_disponible %}
+                                    <span class="badge bg-success">{{ cupo_disponible }} plazas disponibles</span>
+                                {% elif asistentes.count >= event.cupo %}
+                                    <span class="badge bg-danger">Evento lleno</span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <strong>Inscritos:</strong> {{ asistentes.count }} personas
+                            </div>
+                        {% endif %}
+
+                        <!-- Botones de inscripción -->
+                        <div class="mb-3">
+                            {% if esta_inscrito %}
+                                <form method="post" action="{% url 'leave_event' event.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Seguro que quieres desinscribirte de este evento?')">
+                                        <i class="fas fa-minus-circle"></i> Desinscribirme
+                                    </button>
+                                </form>
+                                <span class="badge bg-success ms-2">✓ Estás inscrito</span>
+                            {% else %}
+                                {% if event.cupo and asistentes.count >= event.cupo %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        <i class="fas fa-ban"></i> Evento lleno
+                                    </button>
+                                {% else %}
+                                    <form method="post" action="{% url 'join_event' event.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-plus-circle"></i> Inscribirme
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <!-- Lista de asistentes -->
+                        {% if asistentes %}
+                            <div class="mt-3">
+                                <h6>Personas que asistirán:</h6>
+                                <div class="row">
+                                    {% for asistencia in asistentes %}
+                                        <div class="col-md-6 col-lg-4 mb-2">
+                                            <div class="d-flex align-items-center">
+                                                {% if asistencia.user.profile.avatar %}
+                                                    <img src="{{ asistencia.user.profile.avatar.url }}" alt="Avatar de {{ asistencia.user.username }}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                                        <span class="text-white fw-bold" style="font-size: 12px;">{{ asistencia.user.username|first|upper }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <small class="fw-bold">{{ asistencia.user.username }}</small>
+                                                    {% if asistencia.user.profile.carrera %}
+                                                        <br><small class="text-muted">{{ asistencia.user.profile.carrera }}{% if asistencia.user.profile.semestre %} - Semestre {{ asistencia.user.profile.semestre }}{% endif %}</small>
+                                                    {% elif asistencia.user.profile.area_maestro %}
+                                                        <br><small class="text-muted">{{ asistencia.user.profile.area_maestro }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
                     <div class="mb-3 text-muted">
                         <small>Creado por: <strong>{{ event.creado_por.username }}</strong> el {{ event.fecha_creacion|date:"d/m/Y H:i" }}</small>
                     </div>

@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (ClubListView, ClubCreateView, ClubUpdateView, ClubDeleteView, JoinClubView, ClubDetailView, 
                     RemoveMemberView, LeaveClubView, EventListView, EventDetailView, EventCreateView, 
-                    EventUpdateView, EventDeleteView, AddCommentView, DeleteCommentView)
+                    EventUpdateView, EventDeleteView, AddCommentView, DeleteCommentView, JoinEventView, LeaveEventView)
 
 urlpatterns = [
     path('', ClubListView.as_view(), name='club_list'),   # raíz de la app clubs
@@ -21,5 +21,7 @@ urlpatterns = [
     path('evento/<int:pk>/eliminar/', EventDeleteView.as_view(), name='event_delete'),
     path('evento/<int:event_pk>/comentar/', AddCommentView.as_view(), name='add_comment'),
     path('comentario/<int:comment_pk>/eliminar/', DeleteCommentView.as_view(), name='delete_comment'),
+    path('evento/<int:event_pk>/unirse/', JoinEventView.as_view(), name='join_event'),
+    path('evento/<int:event_pk>/salir/', LeaveEventView.as_view(), name='leave_event'),
 ]
 

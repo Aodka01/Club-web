@@ -35,3 +35,15 @@ class EventComment(models.Model):
     
     class Meta:
         ordering = ['-fecha_creacion']
+
+class EventAttendance(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendances')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    fecha_inscripcion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['event', 'user']
+        ordering = ['fecha_inscripcion']
+    
+    def __str__(self):
+        return f'{self.user.username} - {self.event.titulo}'

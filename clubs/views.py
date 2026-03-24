@@ -2,7 +2,7 @@ from django.views.generic import ListView, DetailView
 from .models import Club
 from django.views.generic import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from .models import Club, Membership, Event, EventComment
+from .models import Club, Membership, Event, EventComment, EventAttendance
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views import View
 from django.shortcuts import redirect, get_object_or_404, render
@@ -181,6 +181,9 @@ class EventDetailView(LoginRequiredMixin, DetailView):
         context['es_coordinador'] = self.request.user.groups.filter(name="Coordinador").exists()
         context['es_creador'] = self.object.creado_por == self.request.user
         context['comentarios'] = self.object.comentarios.all()
+        context['esta_inscrito'] = EventAttendance.objects.filter(event=self.object, user=self.request.user).exists()
+        context['asistentes'] = EventAttendance.objects.filter(event=self.object).select_related('user__profile')
+        context['cupo_disponible'] = self.object.cupo and (self.object.cupo - context['asistentes'].count()) if self.object.cupo else None
         return context
 
 
@@ -274,4 +277,54 @@ class DeleteCommentView(View):
             raise Http404("No tienes permiso para eliminar este comentario")
         
         comment.delete()
+        return redirect('event_detail', pk=event_pk)
+
+
+@method_decorator(login_required, name='dispatch')
+class JoinEventView(View):
+    """Inscribirse a un evento"""
+    def post(self, request, event_pk):
+        try:
+            event = Event.objects.get(pk=event_pk)
+        except Event.DoesNotExist:
+            raise Http404("Evento no encontrado")
+        
+        # Verificar si ya está inscrito
+        if EventAttendance.objects.filter(event=event, user=request.user).exists():
+            from django.contrib import messages
+            messages.warning(request, 'Ya estás inscrito en este evento.')
+            return redirect('event_detail', pk=event_pk)
+        
+        # Verificar cupo si existe
+        if event.cupo:
+            current_attendees = EventAttendance.objects.filter(event=event).count()
+            if current_attendees >= event.cupo:
+                from django.contrib import messages
+                messages.error(request, 'El evento ya está lleno. No hay cupo disponible.')
+                return redirect('event_detail', pk=event_pk)
+        
+        # Crear asistencia
+        EventAttendance.objects.create(event=event, user=request.user)
+        
+        from django.contrib import messages
+        messages.success(request, f'Te has inscrito exitosamente al evento "{event.titulo}".')
+        
+        return redirect('event_detail', pk=event_pk)
+
+
+@method_decorator(login_required, name='dispatch')
+class LeaveEventView(View):
+    """Desinscribirse de un evento"""
+    def post(self, request, event_pk):
+        try:
+            event = Event.objects.get(pk=event_pk)
+            attendance = EventAttendance.objects.get(event=event, user=request.user)
+        except (Event.DoesNotExist, EventAttendance.DoesNotExist):
+            raise Http404("Evento o asistencia no encontrada")
+        
+        attendance.delete()
+        
+        from django.contrib import messages
+        messages.success(request, f'Te has desinscrito del evento "{event.titulo}".')
+        
         return redirect('event_detail', pk=event_pk)
