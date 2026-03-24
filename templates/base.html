@@ -5,29 +5,192 @@
     <title>Sistema de Clubes</title>
     <!-- Bootstrap CDN para diseño rápido -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- Font Awesome para íconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Paleta de colores rojos */
+        :root {
+            --primary-red: #dc3545;
+            --dark-red: #c82333;
+            --light-red: #f8d7da;
+            --border-red: #f5c6cb;
+            --text-red: #721c24;
+        }
+
+        /* Navbar con colores rojos */
+        .navbar-red {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%) !important;
+            box-shadow: 0 2px 10px rgba(220, 53, 69, 0.3);
+        }
+
+        .navbar-red .navbar-brand {
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .navbar-red .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-red .navbar-nav .nav-link:hover {
+            color: white !important;
+        }
+
+        /* Botones principales */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+            background: linear-gradient(135deg, var(--dark-red) 0%, #a02622 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+        }
+
+        /* Cards con estilo rojo */
+        .card {
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.2);
+        }
+
+        /* Alertas con colores rojos */
+        .alert-danger {
+            background-color: var(--light-red);
+            color: var(--text-red);
+            border: 1px solid var(--border-red);
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Formularios */
+        .form-control:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+
+        /* Badges */
+        .badge.bg-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        }
+
+        .badge.bg-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+        }
+
+        /* Animaciones sutiles */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .navbar-brand {
+                font-size: 1.1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-red">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">Clubes ITSC</a>
-            <div class="collapse navbar-collapse">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-users"></i> Clubes ITSC
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profile' %}">Mi Perfil</a>
+                            <a class="nav-link" href="{% url 'profile' %}">
+                                <i class="fas fa-user"></i> Mi Perfil
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <span class="nav-link">Hola, {{ user.username }}</span>
+                            <span class="nav-link">
+                                <i class="fas fa-hand-wave"></i> Hola, {{ user.username }}
+                            </span>
                         </li>
                         <li class="nav-item">
                             <form method="post" action="{% url 'logout' %}" class="d-inline">
                                 {% csrf_token %}
-                                <button class="nav-link btn btn-link" type="submit" style="text-decoration:none;">Salir</button>
+                                <button class="nav-link btn btn-link" type="submit" style="text-decoration:none;">
+                                    <i class="fas fa-sign-out-alt"></i> Salir
+                                </button>
                             </form>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> Entrar
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -35,11 +198,11 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container mt-4 fade-in">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
+                    <i class="fas fa-info-circle me-2"></i>{{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
@@ -47,5 +210,8 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

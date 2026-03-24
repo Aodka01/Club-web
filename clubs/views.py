@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import Http404
 from django import forms
-from .forms import EventForm, EventCommentForm
+from .forms import ClubForm, EventForm, EventCommentForm
 
 
 class ClubListView(LoginRequiredMixin, ListView):
@@ -45,7 +45,7 @@ class ClubDetailView(LoginRequiredMixin, DetailView):
 
 class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin,CreateView):
     model = Club
-    fields = ['nombre', 'descripcion', 'categoria', 'imagen']
+    form_class = ClubForm
     template_name = 'clubs/club_form.html'
     success_url = reverse_lazy('club_list')
 
@@ -63,7 +63,7 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin,CreateView):
 
 class ClubUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Club
-    fields = ['nombre', 'descripcion', 'categoria', 'imagen']
+    form_class = ClubForm
     template_name = 'clubs/club_form.html'
     success_url = reverse_lazy('club_list')
 

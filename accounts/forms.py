@@ -6,7 +6,11 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = ['avatar', 'bio', 'carrera', 'semestre', 'area_maestro']
         widgets = {
-            'bio': forms.Textarea(attrs={'rows': 3}),
+            'avatar': forms.FileInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Cuéntanos un poco sobre ti...'}),
+            'carrera': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Ingeniería en Sistemas'}),
+            'semestre': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 12}),
+            'area_maestro': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Matemáticas, Física, etc.'}),
         }
 
     def __init__(self, *args, **kwargs):

@@ -1,5 +1,82 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Has cerrado sesión</h2>
-<a href="{% url 'login' %}">Iniciar sesión de nuevo</a>
+<style>
+.logout-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-card {
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    text-align: center;
+}
+
+.logout-header {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+}
+
+.logout-header h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 300;
+}
+
+.logout-header i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.logout-body {
+    padding: 2rem;
+}
+
+.btn-logout {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    color: white;
+    text-decoration: none;
+    background: linear-gradient(135deg, #c82333 0%, #a02622 100%);
+}
+</style>
+
+<div class="logout-container">
+    <div class="logout-card">
+        <div class="logout-header">
+            <i class="fas fa-check-circle"></i>
+            <h2>¡Sesión cerrada!</h2>
+            <p>Hasta pronto</p>
+        </div>
+
+        <div class="logout-body">
+            <p class="mb-4">Has cerrado sesión exitosamente del Sistema de Clubes ITSC.</p>
+            <a href="{% url 'login' %}" class="btn-logout">
+                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión de Nuevo
+            </a>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -4,12 +4,12 @@
     <h2>Lista de Clubes</h2>
     
     {% if es_coordinador %}
-        <div class="alert alert-info" role="alert">
-            Bienvenido, coordinador. Puedes crear, editar y eliminar clubes.
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-crown"></i> <strong>Bienvenido, coordinador.</strong> Puedes crear, editar y eliminar clubes.
         </div>
     {% else %}
         <div class="alert alert-info" role="alert">
-            Bienvenido, estudiante. Puedes unirte a los clubes.
+            <i class="fas fa-user-graduate"></i> <strong>Bienvenido, estudiante.</strong> Puedes unirte a los clubes.
         </div>
     {% endif %}
 

@@ -1,5 +1,18 @@
 from django import forms
-from .models import Event, EventComment
+from .models import Club, Event, EventComment
+
+
+class ClubForm(forms.ModelForm):
+    class Meta:
+        model = Club
+        fields = ['nombre', 'descripcion', 'categoria', 'color', 'imagen']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'categoria': forms.TextInput(attrs={'class': 'form-control'}),
+            'color': forms.TextInput(attrs={'class': 'form-control', 'type': 'color'}),
+            'imagen': forms.FileInput(attrs={'class': 'form-control'})
+        }
 
 
 class EventForm(forms.ModelForm):
