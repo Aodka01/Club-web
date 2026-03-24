@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Perfil de {{ profile.user.get_full_name|default:profile.user.username }}</h1>
+    <div class="row">
+        <div class="col-md-4">
+            {% if profile.avatar %}
+                <img src="{{ profile.avatar.url }}" alt="Avatar" class="img-fluid rounded-circle">
+            {% else %}
+                <img src="/static/default-avatar.png" alt="Avatar" class="img-fluid rounded-circle">
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <h2>{{ profile.user.get_full_name|default:profile.user.username }}</h2>
+            <p><strong>Bio:</strong> {{ profile.bio|linebreaks }}</p>
+            {% if es_coordinador %}
+                <p><strong>Área de maestro:</strong> {{ profile.area_maestro }}</p>
+            {% else %}
+                <p><strong>Carrera:</strong> {{ profile.carrera }}</p>
+                <p><strong>Semestre:</strong> {{ profile.semestre }}</p>
+            {% endif %}
+            {% if profile.user.groups.all %}
+                <p><strong>Roles:</strong> {{ profile.user.groups.all|join:", " }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -26,6 +26,7 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),  # login/logout
+    path('accounts/', include('accounts.urls')),  # profiles
     path('', include('clubs.urls')),  # la raíz se maneja en clubs/urls.py
 ]
 

@@ -12,7 +12,7 @@
             
             <hr>
             
-            <p><strong>Creado por:</strong> {{ club.creado_por.username }}</p>
+            <p><strong>Creado por:</strong> <a href="{% url 'profile_detail' club.creado_por.username %}">{{ club.creado_por.username }}</a></p>
             <p><strong>Fecha de creación:</strong> {{ club.fecha_creacion|date:"d/m/Y H:i" }}</p>
             
             <hr>
@@ -23,7 +23,7 @@
                     {% for membership in club.membership_set.all %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>{{ membership.user.username }}</strong>
+                                <strong><a href="{% url 'profile_detail' membership.user.username %}">{{ membership.user.username }}</a></strong>
                                 <small class="text-muted d-block">(Inscrito: {{ membership.fecha_inscripcion|date:"d/m/Y" }})</small>
                             </div>
                             <!-- Botón eliminar miembro solo para coordinador o creador del club -->

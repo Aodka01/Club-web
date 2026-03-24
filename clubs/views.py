@@ -98,6 +98,15 @@ class JoinClubView(View):
             club=club
         )
         
+        if created:
+            from django.contrib import messages
+            messages.success(request, f'Te has unido al club "{club.nombre}" exitosamente.')
+            # Notificar al creador del club si existe
+            if club.creado_por and club.creado_por != request.user:
+                # Aquí podrías enviar un email o guardar una notificación en BD
+                # Por simplicidad, solo mensaje para el usuario
+                pass
+        
         return redirect('club_detail', pk=pk)
 
 
