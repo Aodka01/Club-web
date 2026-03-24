@@ -5,6 +5,7 @@ class Club(models.Model):
     nombre = models.CharField(max_length=150)
     descripcion = models.TextField()
     categoria = models.CharField(max_length=100)
+    imagen = models.ImageField(upload_to='clubes/', null=True, blank=True)
     creado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 

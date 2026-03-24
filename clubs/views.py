@@ -45,9 +45,13 @@ class ClubDetailView(LoginRequiredMixin, DetailView):
 
 class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin,CreateView):
     model = Club
-    fields = ['nombre', 'descripcion']
+    fields = ['nombre', 'descripcion', 'categoria', 'imagen']
     template_name = 'clubs/club_form.html'
     success_url = reverse_lazy('club_list')
+
+    def form_valid(self, form):
+        form.instance.creado_por = self.request.user
+        return super().form_valid(form)
 
     def test_func(self):
         return self.request.user.groups.filter(name="Coordinador").exists()
@@ -59,7 +63,7 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin,CreateView):
 
 class ClubUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Club
-    fields = ['nombre', 'descripcion']
+    fields = ['nombre', 'descripcion', 'categoria', 'imagen']
     template_name = 'clubs/club_form.html'
     success_url = reverse_lazy('club_list')
 
