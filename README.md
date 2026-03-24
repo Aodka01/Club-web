@@ -77,3 +77,5 @@ python manage.py runserver
 - Pagos / checkout para eventos premium
 - Notificaciones por email
 - Chat en vivo para eventos
+
+## aodka
