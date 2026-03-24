@@ -76,9 +76,18 @@
                             {% for comentario in comentarios %}
                                 <div class="mb-3 pb-3 border-bottom">
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <strong>{{ comentario.usuario.username }}</strong>
-                                            <small class="text-muted d-block">{{ comentario.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                        <div class="d-flex align-items-center">
+                                            {% if comentario.usuario.profile.avatar %}
+                                                <img src="{{ comentario.usuario.profile.avatar.url }}" alt="Avatar de {{ comentario.usuario.username }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <span class="text-white fw-bold">{{ comentario.usuario.username|first|upper }}</span>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ comentario.usuario.username }}</strong>
+                                                <small class="text-muted d-block">{{ comentario.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                                            </div>
                                         </div>
                                         {% if usuario == comentario.usuario or es_coordinador %}
                                             <form method="post" action="{% url 'delete_comment' comentario.pk %}" style="display:inline;">
