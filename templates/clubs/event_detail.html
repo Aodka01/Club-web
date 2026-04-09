@@ -122,8 +122,10 @@
                         <small>Creado por: <strong>{{ event.creado_por.username }}</strong> el {{ event.fecha_creacion|date:"d/m/Y H:i" }}</small>
                     </div>
 
-                    {% if es_creador or es_coordinador %}
+                    {% if es_creador or puede_editar_evento %}
                         <a href="{% url 'event_edit' event.pk %}" class="btn btn-warning">Editar Evento</a>
+                    {% endif %}
+                    {% if es_creador or puede_eliminar_evento %}
                         <a href="{% url 'event_delete' event.pk %}" class="btn btn-danger">Eliminar Evento</a>
                     {% endif %}
                 </div>
@@ -165,7 +167,7 @@
                                                 <small class="text-muted d-block">{{ comentario.fecha_creacion|date:"d/m/Y H:i" }}</small>
                                             </div>
                                         </div>
-                                        {% if usuario == comentario.usuario or es_coordinador %}
+                                        {% if usuario == comentario.usuario or puede_editar_evento %}
                                             <form method="post" action="{% url 'delete_comment' comentario.pk %}" style="display:inline;">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar comentario?')">🗑️</button>

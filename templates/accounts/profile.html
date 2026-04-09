@@ -14,7 +14,7 @@
         <div class="col-md-8">
             <h2>{{ profile.user.get_full_name|default:profile.user.username }}</h2>
             <p><strong>Bio:</strong> {{ profile.bio|linebreaks }}</p>
-            {% if es_coordinador %}
+            {% if profile.area_maestro %}
                 <p><strong>Área de maestro:</strong> {{ profile.area_maestro }}</p>
             {% else %}
                 <p><strong>Carrera:</strong> {{ profile.carrera }}</p>

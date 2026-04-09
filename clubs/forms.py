@@ -107,3 +107,4 @@ class EventCommentForm(forms.ModelForm):
                 'placeholder': 'Comparte tu comentario...'
             })
         }
+    

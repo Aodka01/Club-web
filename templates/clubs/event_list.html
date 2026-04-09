@@ -5,7 +5,7 @@
         <div>
             <h2>Eventos del Club: <strong>{{ club.nombre }}</strong></h2>
         </div>
-        {% if es_coordinador %}
+        {% if puede_crear_evento %}
             <a href="{% url 'event_add' club.pk %}" class="btn btn-success">+ Agregar Evento</a>
         {% endif %}
     </div>
@@ -36,8 +36,10 @@
                         </div>
                         <div class="card-footer bg-light">
                             <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-primary">Ver Detalles</a>
-                            {% if es_coordinador %}
+                            {% if puede_editar_evento %}
                                 <a href="{% url 'event_edit' event.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                            {% endif %}
+                            {% if puede_eliminar_evento %}
                                 <a href="{% url 'event_delete' event.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
                             {% endif %}
                         </div>

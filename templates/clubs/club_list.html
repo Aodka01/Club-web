@@ -3,9 +3,9 @@
 <div class="container mt-4">
     <h2>Lista de Clubes</h2>
     
-    {% if es_coordinador %}
+    {% if puede_crear_club %}
         <div class="alert alert-danger" role="alert">
-            <i class="fas fa-crown"></i> <strong>Bienvenido, coordinador.</strong> Puedes crear, editar y eliminar clubes.
+            <i class="fas fa-crown"></i> <strong>Bienvenido, administrador.</strong> Puedes crear, editar y eliminar clubes.
         </div>
     {% else %}
         <div class="alert alert-info" role="alert">
@@ -38,11 +38,14 @@
                                 <!-- Link a detalle para todos -->
                                 <a href="{% url 'club_detail' club.pk %}" class="btn btn-sm btn-info">Ver Detalles</a>
                                 
-                                {% if es_coordinador or club.creado_por == user %}
-                                    <!-- Coordinador o creador puede editar/eliminar -->
+                                {% if puede_editar_club or club.creado_por == user %}
+                                    <!-- Admin o creador puede editar -->
                                     <a href="{% url 'club_edit' club.pk %}" class="btn btn-sm btn-warning ms-1">Editar</a>
+                                {% endif %}
+                                {% if puede_eliminar_club or club.creado_por == user %}
+                                    <!-- Admin o creador puede eliminar -->
                                     <a href="{% url 'club_delete' club.pk %}" class="btn btn-sm btn-danger ms-1">Eliminar</a>
-                                {% elif not es_coordinador %}
+                                {% elif not puede_editar_club %}
                                     <!-- Estudiante: botón unirse solo si no está inscrito -->
                                     {% if club.pk not in mis_clubes %}
                                         <form method="post" action="{% url 'club_join' club.pk %}" style="display:inline;" class="ms-1">
@@ -65,7 +68,7 @@
         </div>
     {% endif %}
 
-    {% if es_coordinador %}
+    {% if puede_crear_club %}
         <a href="{% url 'club_add' %}" class="btn btn-success mt-3">+ Agregar Club</a>
     {% endif %}
 </div>

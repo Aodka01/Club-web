@@ -29,8 +29,8 @@
                                 <strong><a href="{% url 'profile_detail' membership.user.username %}">{{ membership.user.username }}</a></strong>
                                 <small class="text-muted d-block">(Inscrito: {{ membership.fecha_inscripcion|date:"d/m/Y" }})</small>
                             </div>
-                            <!-- Botón eliminar miembro solo para coordinador o creador del club -->
-                            {% if es_creador or es_coordinador %}
+                            <!-- Botón eliminar miembro solo para administrador o creador del club -->
+                            {% if es_creador or puede_editar_club %}
                                 <form method="post" action="{% url 'remove_member' club.pk membership.pk %}" style="display:inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar a este miembro?')">Eliminar</button>
@@ -47,9 +47,11 @@
             <!-- Botón para ver eventos -->
             <a href="{% url 'event_list' club.pk %}" class="btn btn-info">📅 Ver Eventos</a>
             
-            <!-- Botones para coordinadores/creadores -->
-            {% if es_creador or es_coordinador %}
+            <!-- Botones para administradores/creadores -->
+            {% if es_creador or puede_editar_club %}
                 <a href="{% url 'club_edit' club.pk %}" class="btn btn-warning">Editar Club</a>
+            {% endif %}
+            {% if es_creador or puede_eliminar_club %}
                 <a href="{% url 'club_delete' club.pk %}" class="btn btn-danger">Eliminar Club</a>
             {% endif %}
             

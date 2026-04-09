@@ -1,0 +1,501 @@
+================================================================================
+DOCUMENTACIÓN: IMPLEMENTACIÓN DEL SISTEMA DE ROLES Y PERMISOS
+Proyecto: Club Web ITSC
+Fecha: Abril 6, 2026
+================================================================================
+
+ÍNDICE:
+1. Descripción General
+2. Arquitectura del Sistema
+3. Paso a Paso de la Implementación
+4. Archivos Creados
+5. Archivos Modificados
+6. Cómo Funciona el Sistema
+7. Cómo Usar el Sistema
+
+================================================================================
+1. DESCRIPCIÓN GENERAL
+================================================================================
+
+Se implementó un sistema de ROLES Y PERMISOS basado en Django que permite:
+- Crear roles personalizados (ej: "administrador_de_evento", "editor_clubes")
+- Asignar permisos específicos a cada rol
+- Asignar roles a usuarios
+- Controlar qué pueden hacer basado en los permisos de sus roles
+
+Este sistema reemplaza el sistema antiguo que usaba "grupos" fijos (Coordinador/Estudiante)
+y permite mayor flexibility en el control de acceso.
+
+================================================================================
+2. ARQUITECTURA DEL SISTEMA
+================================================================================
+
+El sistema está compuesto por 3 capas principales:
+
+CAPA 1: BASE DE DATOS (Models)
+├─ Role: Define un rol con nombre, descripción y permisos
+├─ Profile: Ahora tiene ManyToMany con Role
+└─ Permission: Permisos de Django (agregar, editar, eliminar eventos/clubes)
+
+CAPA 2: AUTENTICACIÓN (Backend)
+├─ RolePermissionBackend: Backend personalizado que:
+│  ├─ Lee los roles del usuario
+│  ├─ Extrae los permisos asignados a esos roles
+│  └─ Los añade al usuario durante cada petición HTTP
+
+CAPA 3: CONTROL DE ACCESO (Vistas)
+├─ Vistas verifican: user.has_perm('clubs.add_event')
+├─ Middleware de limpieza de permisos en caché
+└─ Templates muestran/esconden botones según permisos
+
+================================================================================
+3. PASO A PASO DE LA IMPLEMENTACIÓN
+================================================================================
+
+PASO 1: MODIFICAR EL MODELO DE PERFIL
+────────────────────────────────────────
+Ruta: /accounts/models.py
+
+Cambios:
+a) Importar: from django.contrib.auth.models import Permission
+b) Crear NUEVA clase Role:
+   - name (CharField): nombre del rol
+   - description (TextField): descripción
+   - permissions (ManyToManyField): permisos de Django asignados
+
+c) Actualizar Profile:
+   - Agregar: roles = ManyToManyField('Role', blank=True)
+   
+Resultado: Ahora cada usuario puede tener múltiples roles, y cada rol
+tiene múltiples permisos.
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 2: CREAR MIGRACIONES
+────────────────────────────────────────
+Ruta: /accounts/migrations/
+
+Comando ejecutado:
+$ python manage.py makemigrations accounts
+
+Resultado: Crea archivo 0003_role_profile_roles.py que:
+- Crea tabla Role en la base de datos
+- Agrega columna 'roles' a tabla Profile (tabla de relación many-to-many)
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 3: APLICAR MIGRACIONES
+────────────────────────────────────────
+Comando:
+$ python manage.py migrate
+
+Resultado: Las migraciones se ejecutan en la base de datos real.
+Ahora Django gestiona la estructura de datos.
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 4: REGISTRAR EN ADMIN
+────────────────────────────────────────
+Ruta: /accounts/admin.py
+
+Cambios:
+a) Importar: from .models import Role
+b) Crear: class RoleAdmin(admin.ModelAdmin)
+   - Mostrar: list_display = ('name', 'description')
+   - Interface: filter_horizontal = ('permissions',) para selector visual
+
+c) Actualizar ProfileAdmin:
+   - Agregar: filter_horizontal = ('roles',)
+   
+Resultado: Admin de Django ahora puede:
+- Crear/editar roles
+- Asignar permisos a roles
+- Asignar roles a usuarios
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 5: CREAR BACKEND DE AUTENTICACIÓN PERSONALIZADO
+────────────────────────────────────────────────────
+Ruta: /accounts/auth_backend.py (NUEVO)
+
+Contenido:
+- Clase: RolePermissionBackend(ModelBackend)
+- Método get_all_permissions():
+  * Obtiene permisos del usuario
+  * Lee cada role del usuario
+  * Extrae permisos de cada role
+  * Retorna: set de todos los permisos (usuarios + roles)
+
+- Método has_perm():
+  * Verifica si permiso está en get_all_permissions()
+  * Retorna True/False
+
+Propósito: Traducir permisos de Roles a permisos de Django
+Sistema: En cada petición, Django pregunta: "¿Tiene permiso XYZ?"
+         Backend responde checando permisos del rol
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 6: CONFIGURAR BACKEND EN SETTINGS
+────────────────────────────────────────
+Ruta: /club_webb/settings.py
+
+Cambios:
+a) Agregar al final del archivo:
+   AUTHENTICATION_BACKENDS = [
+       'accounts.auth_backend.RolePermissionBackend',
+   ]
+
+Resultado: Django usa nuestro backend en lugar del default.
+Ahora cada has_perm() va a través de nuestro RolePermissionBackend
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 7: CREAR MIDDLEWARE DE LIMPIEZA DE CACHÉ
+────────────────────────────────────────────────
+Ruta: /accounts/middleware.py (NUEVO)
+
+Contenido:
+- Clase: RolePermissionsMiddleware
+- Se ejecuta en CADA petición HTTP
+- Limpia caché de permisos del usuario
+- Monkey-patch de get_all_permissions para incluir roles
+
+Propósito: Asegurar que permisos de roles se agreguen a cada petición
+sin necesidad de recargar sesión
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 8: REGISTRAR MIDDLEWARE EN SETTINGS
+────────────────────────────────────────
+Ruta: /club_webb/settings.py
+
+Cambios:
+a) En MIDDLEWARE agregar:
+   'accounts.middleware.RolePermissionsMiddleware',
+   
+Ubicación: Después de 'django.contrib.auth.middleware.AuthenticationMiddleware'
+
+Resultado: Middleware se ejecuta en cada petición, limpiando caché
+de permisos y asegurando que roles se reconozcan
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 9: ACTUALIZAR VISTAS
+────────────────────────────
+Ruta: /clubs/views.py
+
+Cambios en CADA vista de CRUD (Create, Read, Update, Delete):
+
+Para CREAR (EventCreateView, ClubCreateView):
+- test_func(): return self.request.user.has_perm('clubs.add_event')
+  
+Para EDITAR (EventUpdateView, ClubUpdateView):
+- test_func(): return user.has_perm('clubs.change_event') or es_creador
+
+Para ELIMINAR (EventDeleteView, ClubDeleteView):
+- test_func(): return user.has_perm('clubs.delete_event') or es_creador
+
+En get_context_data():
+- context['puede_crear_evento'] = self.request.user.has_perm('clubs.add_event')
+- context['puede_editar_evento'] = self.request.user.has_perm('clubs.change_event')
+- context['puede_eliminar_evento'] = self.request.user.has_perm('clubs.delete_event')
+
+Resultado: Vistas ahora controlan acceso por permisos, no por grupos.
+
+─────────────────────────────────────────────────────────────────────
+
+PASO 10: ACTUALIZAR TEMPLATES
+────────────────────────────────
+Ruta: /templates/clubs/ (todos los HTML)
+
+Cambios:
+a) event_list.html:
+   - {% if puede_crear_evento %} en lugar de {% if es_coordinador %}
+   - {% if puede_editar_evento %} para botón editar
+   - {% if puede_eliminar_evento %} para botón eliminar
+
+b) event_detail.html: Mismo patrón
+
+c) club_list.html: Mismo patrón
+
+d) club_detail.html: Mismo patrón
+
+e) profile.html, profile_detail.html:
+   - {% if profile.area_maestro %} en lugar de {% if es_coordinador %}
+
+Resultado: Botones aparecen basados en permisos de rol, no en grupo.
+
+────────────────────────────────────────────────────────────────────
+
+PASO 11: LIMPIAR ARCHIVOS NO USADOS
+────────────────────────────────────
+Ruta: /templates/accounts/
+
+Eliminados:
+- assign_roles.html (ya no necesario, se usa admin)
+- role_form.html (ya no necesario, se usa admin)
+- role_list.html (ya no necesario, se usa admin)
+- role_confirm_delete.html (ya no necesario, se usa admin)
+
+Razón: La gestión de roles ahora es completamente en el admin de Django.
+
+================================================================================
+4. ARCHIVOS CREADOS
+================================================================================
+
+1. /accounts/auth_backend.py
+   - RolePermissionBackend: Backend de autenticación personalizado
+   - Integra permisos de roles con sistema de permisos de Django
+
+2. /accounts/middleware.py
+   - RolePermissionsMiddleware: Limpia caché y agrega permisos de roles
+   - Se ejecuta en cada petición HTTP
+
+================================================================================
+5. ARCHIVOS MODIFICADOS
+================================================================================
+
+1. /accounts/models.py
+   - Agregó clase Role con permisos many-to-many
+   - Agregó roles many-to-many a Profile
+
+2. /accounts/admin.py
+   - Agregó RoleAdmin con filter_horizontal de permisos
+   - Actualizó ProfileAdmin con filter_horizontal de roles
+
+3. /accounts/forms.py
+   - Eliminó RoleForm (no necesario, se usa admin)
+   - Eliminó AssignRoleForm (no necesario, se usa admin)
+
+4. /accounts/views.py
+   - Eliminó vistas de gestión de roles
+   - Quedó solo vistas de perfil (profile_view, profile_edit, profile_detail)
+
+5. /accounts/urls.py
+   - Eliminó rutas de gestión de roles
+   - Quedó solo rutas de perfil
+
+6. /accounts/migrations/0003_role_profile_roles.py
+   - CREADO AUTOMÁTICAMENTE: Crea tablas en BD
+
+7. /club_webb/settings.py
+   - Agregó AUTHENTICATION_BACKENDS con RolePermissionBackend
+   - Agregó RolePermissionsMiddleware en MIDDLEWARE
+
+8. /clubs/views.py
+   - Actualizó ALL vistas CRUD para usar has_perm() en lugar de grupos
+   - Agregó contexto de permisos (puede_crear_evento, puede_editar_evento, etc.)
+
+9. /templates/clubs/event_list.html
+   - Cambió {% if es_coordinador %} por {% if puede_crear_evento %}
+   - Separó botones de editar y eliminar por permisos
+
+10. /templates/clubs/event_detail.html
+    - Mismo cambio de condiciones
+
+11. /templates/clubs/club_list.html
+    - Mismo cambio de condiciones
+
+12. /templates/clubs/club_detail.html
+    - Mismo cambio de condiciones
+
+13. /templates/accounts/profile.html
+    - Cambió check de grupo por check de atributo
+
+14. /templates/accounts/profile_detail.html
+    - Cambió check de grupo por check de atributo
+
+15. /templates/base.html
+    - Eliminó link "Gestionar Roles" que usaba vistas personalizadas
+    - Ahora roles se manejan solo en admin
+
+================================================================================
+6. CÓMO FUNCIONA EL SISTEMA
+================================================================================
+
+FLUJO DE UNA PETICIÓN HTTP:
+──────────────────────────
+
+1. Usuario hace petición (ej: GET /clubes/)
+
+2. Django procesa:
+   a) Middleware RolePermissionsMiddleware se ejecuta:
+      - Limpia caché de permisos del usuario
+      - Monkey-patch get_all_permissions del usuario
+   
+   b) Vista se ejecuta (ej: ClubListView.get_context_data())
+      - Llama: self.request.user.has_perm('clubs.add_club')
+   
+   c) Django pregunta al backend: "¿Tiene permiso clubs.add_club?"
+   
+   d) RolePermissionBackend responde:
+      - Lee Profile del usuario
+      - Lee cada Role asignado al usuario
+      - Extrae todos los permisos de esos roles
+      - Retorna: True si permiso está en la lista, False si no
+
+3. Vista agrega al contexto:
+   context['puede_crear_club'] = True/False
+
+4. Template recibe contexto y muestra/esconde botones:
+   {% if puede_crear_club %}
+       <a href="...">+ Agregar Club</a>
+   {% endif %}
+
+5. Usuario ve interfaz con botones permitidos según su rol
+
+─────────────────────────────────────────────────────────────────
+
+EJEMPLO ESPECÍFICO: Usuario "yonas"
+──────────────────────────────────
+
+Base de Datos:
+
+┌─ User: yonas ─────────────────┐
+│ username: yonas               │
+│ is_active: True               │
+└───────────────────────┬────────┘
+                        │ (one-to-one)
+┌─ Profile ────────────┴─────────┐
+│ user: yonas                    │
+│ roles: [administrador_de_evento] │
+└────────────────────┬────────────┘
+                     │ (many-to-many)
+┌─ Role ────────────┴──────────────────────┐
+│ name: administrador_de_evento           │
+│ permissions: [                           │
+│   clubs.add_event,                      │
+│   clubs.change_event,                   │
+│   clubs.delete_event,                   │
+│   clubs.add_eventcomment,               │
+│   clubs.change_eventcomment,            │
+│   clubs.delete_eventcomment             │
+│ ]                                        │
+└──────────────────────────────────────────┘
+
+Cuando yonas hace petición:
+
+1. RolePermissionBackend.get_all_permissions(yonas):
+   - Lee Profile(yonas).roles.all() → [administrador_de_evento]
+   - Lee Role.permissions.all() → [8 permisos]
+   - Retorna: {'clubs.add_event', 'clubs.change_event', ...}
+
+2. Vista: yonas.has_perm('clubs.add_event')
+   - Pregunta al backend
+   - Backend retorna: True ✓
+
+3. Template muestra botón "Agregar Evento"
+
+================================================================================
+7. CÓMO USAR EL SISTEMA
+================================================================================
+
+ADMIN PANEL: http://127.0.0.1:8000/admin/
+
+A. CREAR UN ROL:
+─────────────────
+1. Login como admin/superusuario
+2. Ir a: Accounts → Roles → Add role
+3. Completar:
+   - Name: "nombre_del_rol"
+   - Description: "qué hace este rol"
+   - Permissions: Seleccionar permisos con Ctrl+click
+     * clubs.add_event = crear eventos
+     * clubs.change_event = editar eventos
+     * clubs.delete_event = eliminar eventos
+     * clubs.add_club = crear clubes
+     * clubs.change_club = editar clubes
+     * clubs.delete_club = eliminar clubes
+4. Click: Save
+
+B. ASIGNAR ROL A USUARIO:
+──────────────────────────
+1. Ir a: Accounts → Profiles
+2. Click en el usuario (ej: yonas)
+3. En "Roles" field: Seleccionar roles con Ctrl+click
+   Ej: "administrador_de_evento", "editor_clubes"
+4. Click: Save
+
+C. RESULTADO:
+──────────────
+1. Usuario se loguea
+2. RolePermissionsMiddleware lee sus roles
+3. RolePermissionBackend agrega permisos
+4. user.has_perm() ahora retorna True para esos permisos
+5. Vistas y templates muestran botones según permisos
+
+EJEMPLO COMPLETO:
+─────────────────
+
+Crear rol para "Administrador de Eventos":
+├─ Name: "administrador_de_evento"
+├─ Description: "Puede crear, editar y eliminar eventos"
+└─ Permissions: [
+   ├─ clubs.add_event
+   ├─ clubs.change_event
+   ├─ clubs.delete_event
+   └─ ...
+   ]
+
+Asignar a usuario "yonas":
+├─ Profile de yonas
+└─ Roles: [administrador_de_evento]
+
+Resultado cuando yonas se loguea:
+├─ Ve botón "Agregar Evento" ✓
+├─ Ve botones "Editar" en eventos ✓
+├─ Ve botones "Eliminar" en eventos ✓
+├─ NO ve botón "Agregar Club" (no tiene permiso) ✗
+└─ NO ve botones "Editar/Eliminar" en clubes ✗
+
+================================================================================
+VENTAJAS DEL NUEVO SISTEMA
+================================================================================
+
+1. FLEXIBILIDAD:
+   - Crear roles personalizados sin modificar código
+   - Asignar permisos granulares
+
+2. ESCALABILIDAD:
+   - Agregar nuevos permisos sin cambiar backend
+   - Múltiples roles por usuario
+
+3. SEGURIDAD:
+   - Control centralizado en admin
+   - Basado en sistema de permisos de Django
+   - Verificación en vistas y middleware
+
+4. MANTENIMIENTO:
+   - Cambiar permisos sin downtime
+   - Auditable en admin panel
+   - Integrado con Django admin
+
+================================================================================
+RESUMEN TÉCNICO
+================================================================================
+
+Capas del Sistema:
+┌─────────────────────────────────────┐
+│ TEMPLATES (Mostrar/Esconder Botones)│
+│  └─ Usan: {% if puede_crear_evento %}│
+├─────────────────────────────────────┤
+│ VISTAS (Control de Acceso + Context)│
+│  └─ Usan: has_perm() + get_context_data()
+├─────────────────────────────────────┤
+│ MIDDLEWARE (Limpia Caché en c/Request)
+│  └─ Agrega permisos de roles
+├─────────────────────────────────────┤
+│ BACKEND (Extrae Permisos de Roles)  │
+│  └─ Lee Role → Permission
+├─────────────────────────────────────┤
+│ MODELOS (Define Estructura de Datos)│
+│  └─ Role + Profile.roles + Permission
+├─────────────────────────────────────┤
+│ BASE DE DATOS (PostgreSQL/SQLite)   │
+│  └─ Tablas: accounts_role, accounts_profile_roles
+└─────────────────────────────────────┘
+
+================================================================================
+FIN DE LA DOCUMENTACIÓN
+================================================================================

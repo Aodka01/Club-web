@@ -22,7 +22,9 @@ class ClubListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['es_coordinador'] = self.request.user.groups.filter(name="Coordinador").exists()
+        context['puede_crear_club'] = self.request.user.has_perm('clubs.add_club')
+        context['puede_editar_club'] = self.request.user.has_perm('clubs.change_club')
+        context['puede_eliminar_club'] = self.request.user.has_perm('clubs.delete_club')
         # Agregar list de clubes en los que el usuario está inscrito
         context['mis_clubes'] = Membership.objects.filter(user=self.request.user).values_list('club_id', flat=True)
         return context
@@ -37,7 +39,8 @@ class ClubDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['es_coordinador'] = self.request.user.groups.filter(name="Coordinador").exists()
+        context['puede_editar_club'] = self.request.user.has_perm('clubs.change_club')
+        context['puede_eliminar_club'] = self.request.user.has_perm('clubs.delete_club')
         context['es_creador'] = self.object.creado_por == self.request.user
         context['ya_inscrito'] = Membership.objects.filter(user=self.request.user, club=self.object).exists()
         return context
@@ -54,7 +57,7 @@ class ClubCreateView(LoginRequiredMixin, UserPassesTestMixin,CreateView):
         return super().form_valid(form)
 
     def test_func(self):
-        return self.request.user.groups.filter(name="Coordinador").exists()
+        return self.request.user.has_perm('clubs.add_club')
 
     def form_valid(self, form):
         form.instance.creado_por = self.request.user
@@ -69,10 +72,10 @@ class ClubUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         club = self.get_object()
-        # Coordinador puede editar cualquier club, creador puede editar los suyos
-        es_coordinador = self.request.user.groups.filter(name="Coordinador").exists()
+        # Con permiso puede editar cualquier club, creador puede editar los suyos
+        tiene_permiso = self.request.user.has_perm('clubs.change_club')
         es_creador = club.creado_por == self.request.user
-        return es_coordinador or es_creador
+        return tiene_permiso or es_creador
 
 
 class ClubDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -82,10 +85,10 @@ class ClubDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         club = self.get_object()
-        # Coordinador puede eliminar cualquier club, creador puede eliminar los suyos
-        es_coordinador = self.request.user.groups.filter(name="Coordinador").exists()
+        # Con permiso puede eliminar cualquier club, creador puede eliminar los suyos
+        tiene_permiso = self.request.user.has_perm('clubs.delete_club')
         es_creador = club.creado_por == self.request.user
-        return es_coordinador or es_creador
+        return tiene_permiso or es_creador
 
 
 @method_decorator(login_required, name='dispatch')
@@ -165,7 +168,9 @@ class EventListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['club'] = Club.objects.get(pk=self.kwargs['club_pk'])
-        context['es_coordinador'] = self.request.user.groups.filter(name="Coordinador").exists()
+        context['puede_crear_evento'] = self.request.user.has_perm('clubs.add_event')
+        context['puede_editar_evento'] = self.request.user.has_perm('clubs.change_event')
+        context['puede_eliminar_evento'] = self.request.user.has_perm('clubs.delete_event')
         return context
 
 
@@ -178,7 +183,8 @@ class EventDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['es_coordinador'] = self.request.user.groups.filter(name="Coordinador").exists()
+        context['puede_editar_evento'] = self.request.user.has_perm('clubs.change_event')
+        context['puede_eliminar_evento'] = self.request.user.has_perm('clubs.delete_event')
         context['es_creador'] = self.object.creado_por == self.request.user
         context['comentarios'] = self.object.comentarios.all()
         context['esta_inscrito'] = EventAttendance.objects.filter(event=self.object, user=self.request.user).exists()
@@ -188,13 +194,13 @@ class EventDetailView(LoginRequiredMixin, DetailView):
 
 
 class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    """Crear evento (solo coordinador)"""
+    """Crear evento (solo con permiso)"""
     model = Event
     form_class = EventForm
     template_name = 'clubs/event_form.html'
 
     def test_func(self):
-        return self.request.user.groups.filter(name="Coordinador").exists()
+        return self.request.user.has_perm('clubs.add_event')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -211,16 +217,16 @@ class EventCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
 
 class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """Editar evento (solo coordinador o creador)"""
+    """Editar evento (solo con permiso o creador)"""
     model = Event
     form_class = EventForm
     template_name = 'clubs/event_form.html'
 
     def test_func(self):
         event = self.get_object()
-        es_coordinador = self.request.user.groups.filter(name="Coordinador").exists()
+        tiene_permiso = self.request.user.has_perm('clubs.change_event')
         es_creador = event.creado_por == self.request.user
-        return es_coordinador or es_creador
+        return tiene_permiso or es_creador
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -232,15 +238,15 @@ class EventUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
 
 class EventDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """Eliminar evento (solo coordinador o creador)"""
+    """Eliminar evento (solo con permiso o creador)"""
     model = Event
     template_name = 'clubs/event_confirm_delete.html'
 
     def test_func(self):
         event = self.get_object()
-        es_coordinador = self.request.user.groups.filter(name="Coordinador").exists()
+        tiene_permiso = self.request.user.has_perm('clubs.delete_event')
         es_creador = event.creado_por == self.request.user
-        return es_coordinador or es_creador
+        return tiene_permiso or es_creador
 
     def get_success_url(self):
         return reverse_lazy('event_list', kwargs={'club_pk': self.object.club.pk})
